@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EnrolmentStatus {
+  ENROLLED
+  DEFERRED
+  WITHDRAWN
+  COMPLETED
+}
+
+model Programme {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  name        String
+  feeAmount   Decimal      @db.Decimal(10, 2)
+  students    Student[]
+  assessments Assessment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Student {
+  id              String          @id @default(cuid())
+  studentId       String          @unique // e.g. SMS-2025-0001
+  fullName        String
+  email           String          @unique
+  dateOfBirth     DateTime        @db.Date
+  programmeId     String
+  programme       Programme       @relation(fields: [programmeId], references: [id])
+  academicYear    Int             @default(1) // year of study (1, 2, 3...)
+  enrolmentStatus EnrolmentStatus @default(ENROLLED)
+  enrolledAt      DateTime        @default(now())
+  feeAmount       Decimal         @db.Decimal(10, 2) // snapshot from Programme.feeAmount at creation, staff-editable
+  feeDueDate      DateTime        @db.Date // auto-computed enrolledAt + 30 days, staff-editable
+  payments        Payment[]
+  submissions     Submission[]
+  grades          Grade[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([fullName])
+  @@index([programmeId])
+  @@index([enrolmentStatus])
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  studentId       String
+  student         Student  @relation(fields: [studentId], references: [id])
+  amount          Decimal  @db.Decimal(10, 2)
+  paymentDate     DateTime @db.Date
+  referenceNumber String   @unique
+  createdAt       DateTime @default(now())
+
+  @@index([studentId])
+}
+
+model Assessment {
+  id          String       @id @default(cuid())
+  title       String
+  module      String
+  programmeId String
+  programme   Programme    @relation(fields: [programmeId], references: [id])
+  deadline    DateTime
+  submissions Submission[]
+  grades      Grade[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([programmeId])
+}
+
+model Submission {
+  id           String     @id @default(cuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id])
+  fileName     String
+  fileUrl      String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt // last resubmit time; drives the "late" flag
+
+  @@unique([studentId, assessmentId])
+}
+
+model Grade {
+  id           String     @id @default(cuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id])
+  score        Int // 0-100, validated in the API route
+  isPublished  Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([studentId, assessmentId])
+}
