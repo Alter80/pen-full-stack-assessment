@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { errorResponse } from "@/lib/api-error";
+import { requireStaff } from "@/lib/session";
 import { createProgrammeSchema } from "@/lib/validation";
 import { prisma } from "@/lib/prisma";
 
@@ -16,6 +17,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireStaff();
     const body = await request.json();
     const input = createProgrammeSchema.parse(body);
     const programme = await prisma.programme.create({ data: input });

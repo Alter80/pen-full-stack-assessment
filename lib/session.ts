@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { ApiError } from "@/lib/api-error";
 
 export type Role = "staff" | "student";
 
@@ -25,4 +26,17 @@ export async function getSession(): Promise<Session | null> {
   }
 
   return null;
+}
+
+/** For API routes that only Staff should be able to call. */
+export async function requireStaff(): Promise<void> {
+  const session = await getSession();
+  if (session?.role !== "staff") throw new ApiError(403, "Staff access required.");
+}
+
+/** For API routes a Student calls on their own behalf - never trust a client-supplied studentId instead. */
+export async function requireStudent(): Promise<{ role: "student"; studentDbId: string }> {
+  const session = await getSession();
+  if (session?.role !== "student") throw new ApiError(403, "Student access required.");
+  return session;
 }
