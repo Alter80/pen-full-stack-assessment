@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -18,7 +19,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
         <Button variant="outline" onClick={reset}>
           Try again
         </Button>
-        <Button render={<a href="/" />}>Back to start</Button>
+        <Button render={<Link href="/" />}>Back to start</Button>
       </div>
     </div>
   );

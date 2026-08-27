@@ -15,6 +15,7 @@ export default async function AssessmentsPage() {
     prisma.programme.findMany({ orderBy: { name: "asc" } }),
   ]);
 
+  // eslint-disable-next-line react-hooks/purity -- Server Component: runs fresh per request, not memoized by the React Compiler.
   const now = Date.now();
 
   return (

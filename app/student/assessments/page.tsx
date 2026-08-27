@@ -20,6 +20,7 @@ export default async function StudentAssessmentsPage() {
     orderBy: { deadline: "desc" },
   });
 
+  // eslint-disable-next-line react-hooks/purity -- Server Component: runs fresh per request, not memoized by the React Compiler.
   const now = Date.now();
   const canSubmitAtAll = student.enrolmentStatus === "ENROLLED";
 
