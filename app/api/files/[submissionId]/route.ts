@@ -20,7 +20,12 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       throw new ApiError(403, "You don't have access to this file.");
     }
 
-    const buffer = await readFile(path.join(UPLOADS_DIR, submission.fileUrl));
+    let buffer: Buffer;
+    try {
+      buffer = await readFile(path.join(UPLOADS_DIR, submission.fileUrl));
+    } catch {
+      throw new ApiError(404, "The file for this submission is missing on the server.");
+    }
     const ext = path.extname(submission.fileUrl);
 
     return new NextResponse(new Uint8Array(buffer), {
