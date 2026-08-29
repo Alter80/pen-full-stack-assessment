@@ -18,5 +18,9 @@ export default defineConfig({
     // Schema Engine (migrate/db push) still gets the real value: locally via
     // `dotenv/config` above, and in any environment where DATABASE_URL is set.
     url: process.env.DATABASE_URL ?? "",
+    // Migrations and introspection need a direct (unpooled) connection. Set
+    // DIRECT_URL when DATABASE_URL points at a pooler (e.g. Neon's -pooler
+    // host); it falls back to DATABASE_URL for a plain local Postgres.
+    directUrl: process.env.DIRECT_URL || process.env.DATABASE_URL || "",
   },
 });
